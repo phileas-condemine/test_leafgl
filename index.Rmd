@@ -14,6 +14,8 @@ library(magrittr)
 library(colourvalues)
 library(leaflet)
 library(leafgl)
+library(data.table)
+library(sf)
 ```
 
 ```{r data-load, include=FALSE}
@@ -23,14 +25,18 @@ load("my_gadm.RData")
 
 ```{r colors-prep, include=FALSE}
 # A cause de valeurs extrêmes, il vaut mieux considérer les quantiles.
+gadm = data.table(gadm)
+setorder(gadm,mg60_publie)
+gadm = st_as_sf(gadm)
 
 # cuts = cut2(gadm$mg60_publie,g = 5)
 cuts = cut(gadm$mg60_publie,breaks = c(0,1,1.5,2,2.5,3,3.5,4,
                                        max(gadm$mg60_publie,na.rm = T)),
            include.lowest = T)
-cols = colour_values_rgb(cuts%>%as.numeric,
-                         palette = "blue2red",
+cols = colour_values_rgb(-(cuts%>%as.numeric),
+                         palette = "green2red",#no red2green palette, ugly hack : use - 
                          include_alpha = FALSE)
+
 
 hex_cols = apply(unique(cols),1,function(x)ggtern::rgb2hex(x[1],x[2],x[3]))
 
