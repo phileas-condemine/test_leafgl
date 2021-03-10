@@ -1,0 +1,105 @@
+---
+title: "[APL médecins] Affichage avec leaflet + WebGL = leafgl sur flexDashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: row
+    vertical_layout: fill
+    social: menu
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(Hmisc)
+library(magrittr)
+library(colourvalues)
+library(leaflet)
+library(leafgl)
+```
+
+```{r data-load, include=FALSE}
+load("my_gadm.RData")
+```
+
+
+```{r colors-prep, include=FALSE}
+# A cause de valeurs extrêmes, il vaut mieux considérer les quantiles.
+
+# cuts = cut2(gadm$mg60_publie,g = 5)
+cuts = cut(gadm$mg60_publie,breaks = c(0,1,1.5,2,2.5,3,3.5,4,
+                                       max(gadm$mg60_publie,na.rm = T)),
+           include.lowest = T)
+cols = colour_values_rgb(cuts%>%as.numeric,
+                         palette = "blue2red",
+                         include_alpha = FALSE)
+
+hex_cols = apply(unique(cols),1,function(x)ggtern::rgb2hex(x[1],x[2],x[3]))
+
+cols = cols/255
+
+```
+
+
+Dashboard {data-icon="fa-signal"}
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+
+### Communes affichées
+
+```{r boxtot}
+valueBox(nrow(gadm),color = "primary",icon = "globe-europe")
+```
+
+### Communes ayant une APL sous 2.5 (ZIP)
+
+```{r boxzip}
+valueBox(nrow(gadm[gadm$mg60_publie<2.5,]),color = "danger",icon = "globe-europe")
+
+```
+
+### Communes ayant une APL entre 2,5 et 4 (ZAC)
+
+```{r boxzac}
+valueBox(nrow(gadm[gadm$mg60_publie>2.5 & gadm$mg60_publie<4,]),color = "warning",icon = "globe-europe")
+
+```
+
+### Communes ayant une APL supérieure à 4
+
+```{r boxhv}
+valueBox(nrow(gadm[gadm$mg60_publie>4,]),color = "success",icon = "globe-europe")
+
+```
+
+
+Row
+-----------------------------------------------------------------------
+
+### Carte des communes - APL 2015
+
+```{r leafgl_map}
+map <- leaflet() %>%
+    addTiles()%>%
+    # addProviderTiles(provider = providers$CartoDB.DarkMatter) %>%
+  addGlPolygons(data = gadm,fillOpacity = .7,
+                  color = cols,
+                  popup = "popup",
+                  group = "APL mg60 2015") %>%
+    # addPolygons(data=gadm,fillColor =~cols)%>% 17 sec vs 1,6 sec avec Gl
+    # leafem::addMouseCoordinates() %>%
+    setView(lng = 2, lat = 47, zoom = 6) %>%
+    addLegend(colors = hex_cols,
+              labels = levels(cuts))
+    # addLayersControl(overlayGroups = "NAME_5")
+
+map
+```
+
+Informations {data-icon="ion-information-circled"}
+=======================================================================
+
+### A propos des données utilisées
+
+L'indicateur APL (accessibilité potentielle localisée) est une indicateur synthétique calculé par la DREES pour mesurer le taux de présence des professionnels de santé (médecins, sage-femmes, infirmiers, kinés...) par commune.

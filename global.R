@@ -22,6 +22,10 @@ if(!"my_gadm.RData"%in%list.files()){
   gadm=merge(gadm,data,by.x="NAME_5",by.y="NOM_COM.y")
   gadm=sf::st_cast(gadm,"POLYGON")
   gadm=gadm[!is.na(gadm$Z_MOYEN),]
+  gadm$NAME_5=iconv(gadm$NAME_5,"UTF-8","latin1")
+  gadm$NAME_5=iconv(gadm$NAME_5,"latin1","UTF-8")
+  gadm$popup= paste(gadm$NAME_5,"APL:",round(gadm$mg60_publie,1))
+  
   
   save(gadm,file = "my_gadm.RData")
 } 
@@ -29,15 +33,6 @@ if(!"my_gadm.RData"%in%list.files()){
 load("my_gadm.RData")
 
 
-
-gadm$NAME_5=iconv(gadm$NAME_5,"UTF-8","latin1")
-gadm$NAME_5=iconv(gadm$NAME_5,"latin1","UTF-8")
-
-
-
-
-gadm$popup= paste(gadm$NAME_5,"APL:",
-                  round(gadm$mg60_publie,1))
 # gadm$NAME_5=iconv(gadm$NAME_5,"latin1","UTF-8")
 # table(Encoding(gadm$NAME_5))
 # gadm$NAME_5[11:15]
