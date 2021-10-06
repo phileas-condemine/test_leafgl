@@ -1,7 +1,5 @@
 .Rhistory
 .Rproj.user/
-addGlPolygons.R
-deploy.R
 gis_osm_landuse*
 gadm36_FRA_5_sf.rds
 poly_com_simplif.RData
